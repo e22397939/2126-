@@ -1349,19 +1349,42 @@ const scriptTree = {
 
 const logContainer = document.getElementById('story-log-container');
 function logEvent(msg) { 
-    const newEntry = document.createElement('div'); newEntry.className = 'log-entry'; newEntry.innerHTML = msg; 
-    logContainer.appendChild(newEntry); logContainer.scrollTop = logContainer.scrollHeight; 
+    const newEntry = document.createElement('div'); 
+    newEntry.className = 'log-entry'; 
+    newEntry.innerHTML = msg; 
+    logContainer.appendChild(newEntry); 
+    logContainer.scrollTop = logContainer.scrollHeight; 
 }
 
 function renderStep(stepKey) {
     if (stepKey === "start_reset") {
-        gameState = { hp: null, en: null, san: null, scs: null, credits: null, inventory: ["過期健保卡"], equippedWpn: "UNARMED", equippedAmr: "NONE", equippedAcc: "NONE", originWeights: { rat: 0, tech: 0, corp: 0 }, finalOrigin: "未定義", hasKey: false, usedIncense: false, encSalaryman: false, encHomeless: false, knowsTempleSecret: false, temp_hack_success: false };
-        pX = 2; pY = 4; pDir = 0; logContainer.innerHTML = ""; stepKey = "start";
+        gameState = { 
+            hp: null, en: null, san: null, scs: null, credits: null, 
+            inventory: ["過期健保卡"], 
+            equippedWpn: "UNARMED", 
+            equippedAmr: "NONE", 
+            equippedAcc: "NONE", 
+            originWeights: { rat: 0, tech: 0, corp: 0 }, 
+            finalOrigin: "未定義", 
+            hasKey: false, usedIncense: false, encSalaryman: false, 
+            encHomeless: false, knowsTempleSecret: false, 
+            temp_hack_success: false 
+        };
+        pX = 2; pY = 4; pDir = 0; 
+        logContainer.innerHTML = ""; 
+        stepKey = "start";
     }
-    const step = scriptTree[stepKey]; if (!step) return;
+
+    const step = scriptTree[stepKey]; 
+    if (!step) return;
+
     document.getElementById('options-container').setAttribute('data-step', stepKey);
-    if (step.scene_view) currentSceneView = typeof step.scene_view === 'function' ? step.scene_view() : step.scene_view;
+
+    if (step.scene_view) 
+        currentSceneView = typeof step.scene_view === 'function' ? step.scene_view() : step.scene_view;
+
     triggerRedraw();
+
     if (step.portrait && step.speaker) {
         let speakerName = typeof step.speaker === 'function' ? step.speaker() : step.speaker;
         updatePortrait(step.portrait, speakerName);
@@ -1374,22 +1397,31 @@ function renderStep(stepKey) {
     updateUIOnly(); 
     
     const formattedText = formatDialogue(rawText);
-    const newEntry = document.createElement('div'); newEntry.className = 'log-entry'; newEntry.innerHTML = formattedText; 
+    const newEntry = document.createElement('div'); 
+    newEntry.className = 'log-entry'; 
+    newEntry.innerHTML = formattedText; 
     logContainer.appendChild(newEntry); 
     
     logContainer.scrollTop = newEntry.offsetTop;
     
-    const container = document.getElementById('options-container'); container.innerHTML = '';
+    const container = document.getElementById('options-container'); 
+    container.innerHTML = '';
     
     const optionsList = typeof step.options === 'function' ? step.options() : step.options;
     if (optionsList && Array.isArray(optionsList)) {
         optionsList.forEach(opt => { 
-            const btn = document.createElement('button'); btn.className = 'cmd-btn'; 
+            const btn = document.createElement('button'); 
+            btn.className = 'cmd-btn'; 
             btn.innerText = typeof opt.text === 'function' ? opt.text() : opt.text; 
-            btn.onclick = () => { playClickSound(); if (opt.action) opt.action(); else if (opt.nextStep) renderStep(typeof opt.nextStep === 'function' ? opt.nextStep() : opt.nextStep); }; 
+            btn.onclick = () => { 
+                playClickSound(); 
+                if (opt.action) opt.action(); 
+                else if (opt.nextStep) renderStep(typeof opt.nextStep === 'function' ? opt.nextStep() : opt.nextStep); 
+            }; 
             container.appendChild(btn); 
         });
     }
+} // ← 這裡補上，關閉 renderStep 函式
 
 if (stepKey === 'street_hub') {
     const mobileDiv = document.createElement('div'); 
