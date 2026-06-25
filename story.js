@@ -221,7 +221,7 @@ const ART = {
     `    /   |  V4  |   \\`,
     taike:  
     `       .\\/\\/\\/\\/.\n` +
-    `      /   PUNK   \\\n` +
+    `      /          \\\n` +
     `     |            |\n` +
     `     |  \\ /  \\ /  |\n` +
     `     |  [O]  [O]  |\n` +
@@ -632,7 +632,6 @@ const ITEM_DB = {
     "菱洲宮伺服器鑰匙": { type: "read", name: "菱洲宮伺服器鑰匙", ascii: `   O-===\n   |  ||`, desc: "上面刻有周龍幫標誌的物理密碼鑰匙，能打開通往地下室的防爆門。", effect: () => { logEvent(">> 系統：這是一把鑰匙，只能用來開門。"); } }
 };
 
-// 🎯 【修復關鍵】：骰子與判定系統！
 function rollDice(modifier, target, statName) {
     let r = Math.floor(Math.random() * 20) + 1;
     let total = r + modifier;
@@ -773,6 +772,7 @@ function updateUIOnly() {
             }
         }
     }
+}
 
 const scriptTree = {
     start: {
@@ -843,15 +843,15 @@ const scriptTree = {
             const bickers = [
                 "[OS_KERNEL]：掃描周邊環境...無安全庇護所。\n[ID_GHOST]：到底要去哪？我快瘋了！\n[SUPEREGO]：冷靜，君子不立於危牆之下，仔細尋找線索。",
                 "[ID_GHOST]：去搶劫！去破壞！\n[SUPEREGO]：成何體統！收起你那野蠻的念頭！\n[OS_KERNEL]：內分泌系統紊亂中，建議補充糖分。",
-                "[SUPEREGO]：這條街烏煙瘴氣，簡直有辱斯文。\n[ID_GHOST]：少囉嗦，我聞到了血與機油的味道，真讓人興奮。\n[OS_KERNEL]：聽覺接收器過濾掉 85% 噪音。請指示下一步導航。"
+                "[SUPEREGO]：這條街裝壓抑，簡直有辱斯文。\n[ID_GHOST]：少囉嗦，我聞到了血與機油的味道，真讓人興奮。\n[OS_KERNEL]：聽覺接收器過濾掉 85% 噪音。請指示下一步導航。"
             ];
             const randBicker = bickers[Math.floor(Math.random() * bickers.length)];
             return `霓虹燈管發出微弱的嗡嗡聲，你失去了過去的記憶。\n你必須透過下方的向量操控面板在 3D 走廊中移動。\n\n多去和街上的人打聽「這裡是哪裡？現在是什麼時候？」也許你能慢慢拼湊出這條街背後的陰謀。\n\n${randBicker}`;
         },
         options: [
-            { text: "[ 往前移動 ] (走廊移動)", action: () => playerMove() },
-            { text: "[ 向左旋轉 ↺ ]", action: () => playerTurn('left') },
-            { text: "[ 向右旋轉 ↻ ]", action: () => playerTurn('right') }
+            { text: "[ 往前 ] (走廊移動)", action: () => playerMove() },
+            { text: "[ 左轉 ]", action: () => playerTurn('left') },
+            { text: "[ 右轉 ]", action: () => playerTurn('right') }
         ]
     },
 
@@ -890,10 +890,10 @@ const scriptTree = {
     },
     encounter_homeless: {
         scene_view: "dungeon", portrait: ART.homeless, speaker: "NPC // 落魄的街友",
-        text: "一個滿身惡臭、義體嚴重破損外露的街友縮在通風管旁。他嘴裡唸唸有詞：「娘娘在看著...算力被抽走了...大天后宮是假的...」\n\n你靠近他：「老兄...你還好嗎？那間廟是怎麼回事？」\n\n街友猛地抬頭，滿佈血絲的眼睛盯著你：「他們在吃人！福寶和周龍幫...用電子香抽乾你的腦髓！別去拜拜！別去！」\n\n[OS_KERNEL]：警告：對方攜帶未知生化病毒，建議保持 1.5 米距離。\n\n[ID_GHOST]：這傢伙比我們還臭！快離他遠點，免得染上電子梅毒！\n\n[SUPEREGO]：惻隱之心人皆有之，可憐可憐他吧。",
+        text: "一個滿身惡臭、義體嚴重破損外露的街友縮在通風管旁。他嘴裡唸唸有詞：「娘娘在看著...算力被抽走了...大天后宮是假的...」\n\n/你靠近他：「老兄...你還好嗎？那間廟是怎麼回事？」\n\n街友猛地抬頭，滿佈血絲的眼睛盯著你：「他們在吃人！福寶和周龍幫...用電子香抽乾你的腦髓！別去拜拜！別去！」\n\n[OS_KERNEL]：警告：對方攜帶未知生化病毒，建議保持 1.5 米距離。\n\n[ID_GHOST]：這傢伙比我們還臭！快離他遠點，免得染上電子梅毒！\n\n[SUPEREGO]：惻隱之心人皆有之，可憐可憐他吧。",
         options: [
             { text: "> 「聽起來瘋瘋癲癲的，還是走吧。」", nextStep: "street_hub" },
-            { text: "> 給他一點 10 企業幣買吃的 (如果你有錢)", nextStep: "homeless_give" }
+            { text: "> 给他一點 10 企業幣買吃的 (如果你有錢)", nextStep: "homeless_give" }
         ]
     },
     homeless_give: {
@@ -1126,7 +1126,7 @@ const scriptTree = {
     },
     goto_betelnut: {
         scene_view: "gangster", portrait: ART.taike, speaker: "NPC // 聯友會 檳榔豪哥",
-        text: "「雙子星檳榔」招牌下，三個嚼著檳榔的台客混混圍在廢棄油桶旁。\n『看三小？閃遠點！』\n你開口詢問：「不好意思......」\n混混眼神一變：『幹你娘是要幹嘛啦，找死是不是？』\n\n[OS_KERNEL]：偵測到幫派分子。武裝威脅度：中等。\n[ID_GHOST]：撕裂他們！把他們的生鏽紋身給卸下來！\n[SUPEREGO]：粗俗！動手是野蠻人的行徑。我們應該以理服人。\n\n攤位上擺著【特級雙子星檳榔】與散裝的【電子香】(售價：25)。",
+        text: "「雙子星檳榔」招牌下，三個嚼著檳榔的台客混混圍在廢棄油桶旁。\n『看三小！』\n你開口詢問：「不好意思......」\n混混眼神一變：『幹你娘是要幹嘛啦，找死是不是？』\n\n[OS_KERNEL]：偵測到幫派分子。武裝威脅度：中等。\n[ID_GHOST]：撕裂他們！把他們的生鏽紋身給卸下來！\n[SUPEREGO]：粗俗！動手是野蠻人的行徑。我們應該以理服人。\n\n攤位上擺著【特級雙子星檳榔】與散裝的【電子香】(售價：25)。",
         options: () => {
             let opts = [
                 { text: "> 購買「特級雙子星檳榔」 (10 企業幣)", nextStep: "buy_betelnut" },
@@ -1421,16 +1421,17 @@ function renderStep(stepKey) {
             container.appendChild(btn); 
         });
     }
-} // ← 這裡補上，關閉 renderStep 函式
 
-if (stepKey === 'street_hub') {
-    const mobileDiv = document.createElement('div'); 
-    mobileDiv.className = 'mobile-controls';
-    mobileDiv.innerHTML = `<button class="sys-btn" onclick="playerTurn('left')">↺ 轉左</button>
-                           <button class="sys-btn" onclick="playerMove()">▲ 往前</button>
-                           <button class="sys-btn" onclick="playerTurn('right')">轉右 ↻</button>`;
-    container.appendChild(mobileDiv);
-}
+    // 這段必須要在 renderStep 的大括號裡面！
+    if (stepKey === 'street_hub') {
+        const mobileDiv = document.createElement('div'); 
+        mobileDiv.className = 'mobile-controls';
+        mobileDiv.innerHTML = `<button class="sys-btn" onclick="playerTurn('left')">↺ 轉左</button>
+                               <button class="sys-btn" onclick="playerMove()">▲ 往前</button>
+                               <button class="sys-btn" onclick="playerTurn('right')">轉右 ↻</button>`;
+        container.appendChild(mobileDiv);
+    }
+} // ← 這裡才是真正關閉 renderStep 函式的大括號！
 
 window.onload = function() { 
     resizeVectorCanvas(); 
