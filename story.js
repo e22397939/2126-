@@ -1391,11 +1391,15 @@ function renderStep(stepKey) {
         });
     }
 
-    if (stepKey === 'street_hub') {
-        const mobileDiv = document.createElement('div'); mobileDiv.className = 'mobile-controls';
-        mobileDiv.innerHTML = `<button class="sys-btn" onclick="playerTurn('left')">↺ 轉左</button><button class="sys-btn" onclick="playerMove()">▲ 往前</button><button class="sys-btn" onclick="playerTurn('right')">轉右 ↻</button>`;
-        container.appendChild(mobileDiv);
-    }
+if (stepKey === 'street_hub') {
+    const mobileDiv = document.createElement('div'); 
+    mobileDiv.className = 'mobile-controls';
+    mobileDiv.innerHTML = `<button class="sys-btn" onclick="playerTurn('left')">↺ 轉左</button>
+                           <button class="sys-btn" onclick="playerMove()">▲ 往前</button>
+                           <button class="sys-btn" onclick="playerTurn('right')">轉右 ↻</button>`;
+    container.appendChild(mobileDiv);
 }
 
-window.onload = function() { resizeVectorCanvas(); }
+window.onload = function() { 
+    resizeVectorCanvas(); 
+}
