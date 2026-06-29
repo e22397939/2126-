@@ -1,3 +1,6 @@
+// =====================================================================
+// 🎵 【音效與音樂系統核心】 (不更動既有 BGM 與 Click 邏輯)
+// =====================================================================
 let audioCtx = null; 
 let bmgPlaying = false; 
 let isMuted = false; 
@@ -139,6 +142,69 @@ function togglePanel(target) {
 }
 function toggleMute() { playClickSound(); isMuted = !isMuted; document.getElementById('mute-btn').innerText = isMuted ? "BGM_ENGINE: MUTED" : "BGM_ENGINE: VOID_ON"; }
 function changeTheme(color, glow, panel, border, bg) { playClickSound(); document.documentElement.style.setProperty('--theme-color', color); document.documentElement.style.setProperty('--theme-glow', glow); document.documentElement.style.setProperty('--theme-panel', panel); document.documentElement.style.setProperty('--theme-border', border); document.documentElement.style.setProperty('--theme-bg', bg); triggerRedraw(); }
+
+// 📌 【新增功能：Web Audio 科技風電流運算音效產生器】
+// 時長 1 秒，完全模擬機器、電流與資料演算的高科技白噪音
+function playComputationSound(duration) {
+    if (isMuted || !audioCtx) return;
+    const now = audioCtx.currentTime;
+    
+    // 🔊 1. 深沉的伺服器硬體運轉低頻 (硬體運作基調)
+    const baseOsc = audioCtx.createOscillator();
+    const baseGain = audioCtx.createGain();
+    baseOsc.type = 'sawtooth';
+    baseOsc.frequency.setValueAtTime(65, now); // 65Hz 極低沉嗡嗡聲
+    
+    // 🔊 2. 高頻數據電流傳輸與火花 (科技晶片感)
+    const dataOsc = audioCtx.createOscillator();
+    const dataGain = audioCtx.createGain();
+    dataOsc.type = 'triangle';
+    dataOsc.frequency.setValueAtTime(1000, now);
+    
+    // 電流頻率快速抖動以模擬資料流交換
+    dataOsc.frequency.linearRampToValueAtTime(1600, now + duration * 0.2);
+    dataOsc.frequency.linearRampToValueAtTime(800, now + duration * 0.5);
+    dataOsc.frequency.linearRampToValueAtTime(1400, now + duration * 0.8);
+    dataOsc.frequency.linearRampToValueAtTime(1100, now + duration);
+
+    // 🔊 3. 強烈共鳴帶通濾波器 (模擬算力頻寬劇烈起伏)
+    const sweepFilter = audioCtx.createBiquadFilter();
+    sweepFilter.type = 'bandpass';
+    sweepFilter.Q.setValueAtTime(12, now); // 高Q值形成強烈的科幻共振哨音
+    sweepFilter.frequency.setValueAtTime(500, now);
+    sweepFilter.frequency.exponentialRampToValueAtTime(3500, now + duration * 0.4);
+    sweepFilter.frequency.exponentialRampToValueAtTime(600, now + duration * 0.85);
+    sweepFilter.frequency.exponentialRampToValueAtTime(1200, now + duration);
+
+    // 🔊 4. 電流不穩定振幅調變 (劈啪作響的科技感)
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.setValueAtTime(0.015, now); // 保持舒適柔和的音量，不喧賓奪主
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+    // 🔊 5. 快速振幅變更，模擬電流劈啪聲
+    dataGain.gain.setValueAtTime(0.2, now);
+    for (let i = 0; i < 20; i++) {
+        const offset = (duration / 20) * i;
+        dataGain.gain.setValueAtTime(0.05 + Math.random() * 0.35, now + offset);
+    }
+
+    // 🔊 6. 節點管路連結
+    baseOsc.connect(baseGain);
+    baseGain.gain.setValueAtTime(0.4, now);
+    baseGain.connect(sweepFilter);
+
+    dataOsc.connect(dataGain);
+    dataGain.connect(sweepFilter);
+
+    sweepFilter.connect(masterGain);
+    masterGain.connect(audioCtx.destination);
+
+    // 🔊 7. 啟動與結束
+    baseOsc.start(now);
+    baseOsc.stop(now + duration);
+    dataOsc.start(now);
+    dataOsc.stop(now + duration);
+}
 
 const ART = {
     player: 
@@ -832,7 +898,7 @@ const scriptTree = {
         text: () => {
             return "你忍著噁心感，蹲下身在滿是油漬與電路廢棄物的床底摸索。\n\n[OS_KERNEL]：掃描到有機殘留物。偵測到工業靜電釋放源。\n\n[ID_GHOST]：哈哈！有黃色的液體，快喝下去解渴！還有個大鐵夾，這玩意砸在別人腦袋上一定能發出好聽的聲音！\n\n[SUPEREGO]：在床底下撿別人剩下的垃圾，成何體統？但...為了生存，孔子說『君子不器』，暫且收下吧。";
         },
-        options: [ { text: "> 很好，收起這些東西，轉身回到房間中央...", nextStep: "start" } ]
+        options: [ { text: "> 鍵好，收起這些東西，轉身回到房間中央...", nextStep: "start" } ]
     },
     look_mirror: {
         scene_view: "room", portrait: ART.player, speaker: "CITIZEN // UNKNOWN",
@@ -888,9 +954,9 @@ const scriptTree = {
             return `霓虹燈管發出微弱的嗡嗡聲，你失去了過去的記憶。\n你必須透過下方的向量操控面板在 3D 走廊中移動。\n\n多去和街上的人打聽「這裡是哪裡？現在是什麼時候？」也許你能慢慢拼湊出這條街背後的陰謀。\n\n${randBicker}`;
         },
         options: [
-            { text: "[ 往前 ] (走廊移動)", action: () => playerMove() },
-            { text: "[ 左轉 ]", action: () => playerTurn('left') },
-            { text: "[ 右轉 ]", action: () => playerTurn('right') }
+            { text: "[ 往前移動 ] (走廊移動)", action: () => playerMove() },
+            { text: "[ 向左旋轉 ↺ ]", action: () => playerTurn('left') },
+            { text: "[ 向右旋轉 ↻ ]", action: () => playerTurn('right') }
         ]
     },
 
@@ -1226,7 +1292,7 @@ const scriptTree = {
         },
         text: () => {
             if (gameState.temp_success) {
-                return "你搶先發難！精準地砸在混混的液壓關節上！你一把抓起掉在地上的【菱洲宮伺服器鑰匙】。\n\n[ID_GHOST]：聽見那美妙的骨裂聲了嗎？這就是街頭的法則！";
+                return "幕後衝突判定成功！你搶先發難，精準地砸在混混的液壓關節上！你一把抓起掉在地上的【菱洲宮伺服器鑰匙】。\n\n[ID_GHOST]：聽見那美妙的骨裂聲了嗎？這就是街頭的法則！";
             } else {
                 return "三個嚼檳榔的台客比你想像的悍勇。一根實心鋼管狠狠砸在你腹部。你倒在血泊中...";
             }
@@ -1288,7 +1354,7 @@ const scriptTree = {
     open_basement: {
         scene_view: "temple", portrait: ART.player,
         text: () => {
-            if (!gameState.hasKey && !gameState.inventory.includes("菱洲宮伺服器鑰匙")) return "防爆鐵門上裝著一道密碼盤。你沒有對應的鑰匙，無法強行破壞。";
+            if (!gameState.hasKey && !gameState.inventory.includes("菱洲宮伺危器鑰匙")) return "防爆鐵門上裝著一道密碼盤。你沒有對應的鑰匙，無法強行破壞。";
             return "你掏出「菱洲宮伺服器鑰匙」插入插槽。大門緩慢分開，露出一道深不見底的向下通道。";
         },
         options: [
@@ -1354,7 +1420,7 @@ const scriptTree = {
             }
         },
         text: () => {
-            if (gameState.temp_success) return "你指著冷卻架：『背叛福寶，獲得真正的自由。』阿東熄滅了電子菸：『這條街以後我們平分！』\n\n[SUPEREGO]：化干戈為玉帛，此乃上兵伐謀也！";
+            if (gameState.temp_success) return "你指著冷卻架：『背叛福寶，獲得真正的自由。』阿東熄滅了電子菸：『媽的，這條街以後我們平分！』\n\n[SUPEREGO]：化干戈為玉帛，此乃上兵伐謀也！";
             else return "『少在那裡挑撥離間！』阿東一鋼拳砸碎了你的膝蓋，槍聲響起...";
         },
         options: [ { text: () => (gameState.hp === null || gameState.hp <= 0) ? ">> 失去意識..." : ">> 與阿東共同走向未來...", nextStep: () => (gameState.hp === null || gameState.hp <= 0) ? "death_hp" : "boss_deal_ending" } ]
