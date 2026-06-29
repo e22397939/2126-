@@ -282,8 +282,8 @@ const ART = {
     `       \\________/\n` +
     `        '------'\n` +
     `      .-'      '-.\n` +
-    `     /  |======|  \\\n` +
-    `    /   |AH-DONG|  \\`
+    `     /   |======|  \\\n` +
+    `    /    | DONG |   \\`
 };
 
 const DUNGEON_MAP = [
@@ -632,13 +632,52 @@ const ITEM_DB = {
     "菱洲宮伺服器鑰匙": { type: "read", name: "菱洲宮伺服器鑰匙", ascii: `   O-===\n   |  ||`, desc: "上面刻有周龍幫標誌的物理密碼鑰匙，能打開通往地下室的防爆門。", effect: () => { logEvent(">> 系統：這是一把鑰匙，只能用來開門。"); } }
 };
 
-function rollDice(modifier, target, statName) {
-    let r = Math.floor(Math.random() * 20) + 1;
-    let total = r + modifier;
-    let success = total >= target;
-    let resultText = success ? "【成功】" : "【失敗】";
-    logEvent(`<span class="log-dice">🎲 系統檢定 [${statName}]: 擲骰 1d20(${r}) + 補正(${modifier}) = ${total} ＞ 目標難度(${target}) ... ${resultText}</span>`);
-    return success;
+// 🎯 【全新模組化升級】：讓擲骰子變成「異步運算」，加入 1 秒駭客代碼動畫！
+async function rollDice(modifier, target, statName) {
+    return new Promise((resolve) => {
+        // 先建立一個用來播放動畫的獨立訊息框
+        const rollDiv = document.createElement('div');
+        rollDiv.className = 'log-entry log-dice';
+        logContainer.appendChild(rollDiv);
+        logContainer.scrollTop = logContainer.scrollHeight;
+
+        const hackerStrings = [
+            "0x8F9A: DECRYPTING_HASH...", 
+            "0x11B2: BYPASS_FIREWALL...", 
+            "0xA99C: SYS_OVERRIDE...",
+            "0x2B11: INJECTING_PAYLOAD...", 
+            "0x99AA: MEMORY_ALLOCATE...", 
+            "0x77C3: BRUTE_FORCING..."
+        ];
+
+        let ticks = 0;
+        // 每 100 毫秒跳動一次代碼，總共執行 10 次 = 1 秒
+        const animInterval = setInterval(() => {
+            let randomStr1 = hackerStrings[Math.floor(Math.random() * hackerStrings.length)];
+            let randomStr2 = hackerStrings[Math.floor(Math.random() * hackerStrings.length)];
+            
+            // 動畫播放中的文字
+            rollDiv.innerHTML = `🎲 系統檢定 [${statName}] 運算中...<br><span style="color:#88ffff; font-size:12px; font-family: monospace;">> ${randomStr1}<br>> ${randomStr2}</span>`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            ticks++;
+            if (ticks >= 10) {
+                clearInterval(animInterval);
+                
+                // 動畫結束，進行實際的骰子數學計算
+                let r = Math.floor(Math.random() * 20) + 1;
+                let total = r + modifier;
+                let success = total >= target;
+                let resultText = success ? "【成功】" : "【失敗】";
+                
+                // 將剛才的動畫框內容，替換成最終的判定結果
+                rollDiv.innerHTML = `🎲 系統檢定 [${statName}]: 擲骰 1d20(${r}) + 補正(${modifier}) = ${total} ＞ 目標難度(${target}) ... ${resultText}`;
+                logContainer.scrollTop = logContainer.scrollHeight;
+                
+                resolve(success); // 回傳成功與否給劇情系統
+            }
+        }, 100);
+    });
 }
 
 function changeInvTab(tabName) {
@@ -871,8 +910,9 @@ const scriptTree = {
     },
     salaryman_extort: {
         scene_view: "dungeon", portrait: ART.player, speaker: () => `CITIZEN // ${playerName}`,
-        effect: () => {
-            gameState.temp_success = rollDice(0, 10, "肉搏/威嚇");
+        // 🎯 改為 async，並使用 await 暫停 1 秒等骰子動畫跑完
+        effect: async () => {
+            gameState.temp_success = await rollDice(0, 10, "肉搏/威嚇");
             if (gameState.temp_success) {
                 gameState.credits += 40; gameState.scs = Math.max(0, gameState.scs - 15);
             } else {
@@ -954,8 +994,9 @@ const scriptTree = {
     },
     ponytwo_steal: {
         scene_view: "store", portrait: ART.player, speaker: () => `CITIZEN // ${playerName}`,
-        effect: () => {
-            gameState.temp_success = rollDice(3, 10, "科技/駭入");
+        // 🎯 駭入判定，加上 async await
+        effect: async () => {
+            gameState.temp_success = await rollDice(3, 10, "科技/駭入");
             if (gameState.temp_success) {
                 gameState.inventory.push("芃貳功能飲料");
             } else {
@@ -1106,9 +1147,10 @@ const scriptTree = {
     },
     wowolun_hack: {
         scene_view: "cars", portrait: ART.player, speaker: () => `CITIZEN // ${playerName}`,
-        effect: () => {
+        // 🎯 駭入判定，加上 async await
+        effect: async () => {
             let modifier = (gameState.equippedAcc === "忠卦特許神經晶片" || gameState.equippedAcc === "土製降壓電容") ? 4 : 0;
-            gameState.temp_success = rollDice(modifier, 18, "超限科技/駭入");
+            gameState.temp_success = await rollDice(modifier, 18, "超限科技/駭入");
             if (gameState.temp_success) {
                 gameState.credits = Math.min(999, gameState.credits + 300);
             } else {
@@ -1126,7 +1168,7 @@ const scriptTree = {
     },
     goto_betelnut: {
         scene_view: "gangster", portrait: ART.taike, speaker: "NPC // 聯友會 檳榔豪哥",
-        text: "「雙子星檳榔」招牌下，三個嚼著檳榔的台客混混圍在廢棄油桶旁。\n『看三小！』\n你開口詢問：「不好意思......」\n混混眼神一變：『幹你娘是要幹嘛啦，找死是不是？』\n\n[OS_KERNEL]：偵測到幫派分子。武裝威脅度：中等。\n[ID_GHOST]：撕裂他們！把他們的生鏽紋身給卸下來！\n[SUPEREGO]：粗俗！動手是野蠻人的行徑。我們應該以理服人。\n\n攤位上擺著【特級雙子星檳榔】與散裝的【電子香】(售價：25)。",
+        text: "「雙子星檳榔」招牌下，三個嚼著檳榔的台客混混圍在廢棄油桶旁。\n『看三小？閃遠點！』\n你開口詢問：「不好意思......」\n混混眼神一變：『幹你娘是要幹嘛啦，找死是不是？』\n\n[OS_KERNEL]：偵測到幫派分子。武裝威脅度：中等。\n[ID_GHOST]：撕裂他們！把他們的生鏽紋身給卸下來！\n[SUPEREGO]：粗俗！動手是野蠻人的行徑。我們應該以理服人。\n\n攤位上擺著【特級雙子星檳榔】與散裝的【電子香】(售價：25)。",
         options: () => {
             let opts = [
                 { text: "> 購買「特級雙子星檳榔」 (10 企業幣)", nextStep: "buy_betelnut" },
@@ -1170,11 +1212,12 @@ const scriptTree = {
     },
     gang_fight: {
         scene_view: "gangster", portrait: ART.player, speaker: () => `CITIZEN // ${playerName}`,
-        effect: () => {
+        // 🎯 戰鬥判定，加上 async await
+        effect: async () => {
             let modifier = 0;
             if (gameState.equippedWpn === "改裝切割熱刀") modifier += 6;
             else if (gameState.equippedWpn === "過載的電路夾子") modifier += 3;
-            gameState.temp_success = rollDice(modifier, 12, "肉搏/戰鬥");
+            gameState.temp_success = await rollDice(modifier, 12, "肉搏/戰鬥");
             if (gameState.temp_success) {
                 gameState.hasKey = true; if(!gameState.inventory.includes("菱洲宮伺服器鑰匙")) gameState.inventory.push("菱洲宮伺服器鑰匙");
             } else {
@@ -1192,10 +1235,11 @@ const scriptTree = {
     },
     gang_talk: {
         scene_view: "gangster", portrait: ART.player, speaker: () => `CITIZEN // ${playerName}`,
-        effect: () => {
+        // 🎯 口才判定，加上 async await
+        effect: async () => {
             let targetDiff = (gameState.equippedAcc === "亮銀八卦項鍊") ? 7 : 13;
             if (gameState.equippedAcc === "亮銀八卦項鍊") logEvent(">> [飾品]：『亮銀八卦項鍊』使混混精神鬆懈，難度大幅降低！");
-            gameState.temp_success = rollDice(3, targetDiff, "機智/口才");
+            gameState.temp_success = await rollDice(3, targetDiff, "機智/口才");
             if (gameState.temp_success) {
                 gameState.hasKey = true; if(!gameState.inventory.includes("菱洲宮伺服器鑰匙")) gameState.inventory.push("菱洲宮伺服器鑰匙");
             } else {
@@ -1262,14 +1306,15 @@ const scriptTree = {
     },
     boss_fight: {
         scene_view: "basement", portrait: ART.player, speaker: () => `CITIZEN // ${playerName}`,
-        effect: () => {
+        // 🎯 BOSS戰判定，加上 async await
+        effect: async () => {
             let modifier = 0;
             if (gameState.equippedWpn === "改裝切割熱刀") modifier += 6;
             else if (gameState.equippedWpn === "過載的電路夾子") modifier += 3;
             let targetDiff = (gameState.equippedAmr === "忠卦高級防護裝甲") ? 8 : 14;
             if (gameState.equippedAmr === "忠卦高級防護裝甲") logEvent(">> [防具]：『忠卦高級防護裝甲』大幅抵銷了阿東的液壓拳擊，難度減半！");
 
-            gameState.temp_success = rollDice(modifier, targetDiff, "肉搏/戰鬥");
+            gameState.temp_success = await rollDice(modifier, targetDiff, "肉搏/戰鬥");
             if (!gameState.temp_success) {
                 gameState.hp = 0; 
             }
@@ -1282,9 +1327,10 @@ const scriptTree = {
     },
     boss_hack: {
         scene_view: "basement", portrait: ART.player, speaker: () => `CITIZEN // ${playerName}`,
-        effect: () => {
+        // 🎯 BOSS駭入，加上 async await
+        effect: async () => {
             let modifier = (gameState.equippedAcc === "忠卦特許神經晶片") ? 4 : 0;
-            gameState.temp_success = rollDice(modifier, 13, "科技/駭入");
+            gameState.temp_success = await rollDice(modifier, 13, "科技/駭入");
             if (!gameState.temp_success) {
                 gameState.hp = 0;
             }
@@ -1297,11 +1343,12 @@ const scriptTree = {
     },
     boss_deal: {
         scene_view: "basement", portrait: ART.ah_dong, speaker: "BOSS // 周龍幫 阿東",
-        effect: () => {
+        // 🎯 BOSS口才，加上 async await
+        effect: async () => {
             let targetDiff = (gameState.equippedAcc === "亮銀八卦項鍊") ? 8 : 15;
             if (gameState.equippedAcc === "亮銀八卦項鍊") logEvent(">> [飾品]：『亮銀八卦項鍊』使阿東合作態度軟化，口才難度減半！");
 
-            gameState.temp_success = rollDice(2, targetDiff, "機智/口才");
+            gameState.temp_success = await rollDice(2, targetDiff, "機智/口才");
             if (!gameState.temp_success) {
                 gameState.hp = 0; 
             }
@@ -1356,7 +1403,8 @@ function logEvent(msg) {
     logContainer.scrollTop = logContainer.scrollHeight; 
 }
 
-function renderStep(stepKey) {
+// 🎯 【修復關鍵】：把 renderStep 升級為 Async 異步函數，這樣它就能完美等待骰子動畫播完！
+async function renderStep(stepKey) {
     if (stepKey === "start_reset") {
         gameState = { 
             hp: null, en: null, san: null, scs: null, credits: null, 
@@ -1380,6 +1428,10 @@ function renderStep(stepKey) {
 
     document.getElementById('options-container').setAttribute('data-step', stepKey);
 
+    // 🎯 為了防止玩家在 1 秒鐘動畫期間亂點，我們先把舊按鈕清空！
+    const container = document.getElementById('options-container'); 
+    container.innerHTML = '';
+
     if (step.scene_view) 
         currentSceneView = typeof step.scene_view === 'function' ? step.scene_view() : step.scene_view;
 
@@ -1390,7 +1442,8 @@ function renderStep(stepKey) {
         updatePortrait(step.portrait, speakerName);
     }
     
-    if (step.effect) step.effect(); 
+    // 🎯 這裡會等待（await）骰子的 1 秒鐘動畫跑完，才會繼續往下走
+    if (step.effect) await step.effect(); 
     
     let rawText = typeof step.text === 'function' ? step.text() : step.text;
     
@@ -1403,9 +1456,6 @@ function renderStep(stepKey) {
     logContainer.appendChild(newEntry); 
     
     logContainer.scrollTop = newEntry.offsetTop;
-    
-    const container = document.getElementById('options-container'); 
-    container.innerHTML = '';
     
     const optionsList = typeof step.options === 'function' ? step.options() : step.options;
     if (optionsList && Array.isArray(optionsList)) {
@@ -1422,7 +1472,6 @@ function renderStep(stepKey) {
         });
     }
 
-    // 這段必須要在 renderStep 的大括號裡面！
     if (stepKey === 'street_hub') {
         const mobileDiv = document.createElement('div'); 
         mobileDiv.className = 'mobile-controls';
@@ -1431,7 +1480,7 @@ function renderStep(stepKey) {
                                <button class="sys-btn" onclick="playerTurn('right')">轉右 ↻</button>`;
         container.appendChild(mobileDiv);
     }
-} // ← 這裡才是真正關閉 renderStep 函式的大括號！
+} 
 
 window.onload = function() { 
     resizeVectorCanvas(); 
